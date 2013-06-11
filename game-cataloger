@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd $HOME/.game-cataloger
+python -m scripts.application "$HOME/.game-cataloger"
