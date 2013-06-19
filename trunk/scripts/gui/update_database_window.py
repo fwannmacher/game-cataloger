@@ -6,13 +6,13 @@ Visit the project in http://code.google.com/p/python-project-utils/
 import pygtk
 pygtk.require('2.0')
 import gtk
-from main_window_manager import MainWindowManager
+from .. import util
 
 class UpdateDatabaseWindow(gtk.Window):
 	def __init__(self):
 		gtk.Window.__init__(self, gtk.WINDOW_POPUP)
 
-		self.set_transient_for(MainWindowManager.get_main_window())
+		self.set_transient_for(util.ApplicationManager.get_application_window())
 		self.set_position(gtk.WIN_POS_CENTER)
 		self.set_default_size(320, 30)
 		self._progress_bar = gtk.ProgressBar()

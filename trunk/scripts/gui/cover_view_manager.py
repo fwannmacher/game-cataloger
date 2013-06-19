@@ -8,9 +8,9 @@ pygtk.require('2.0')
 import gtk
 from notifier import Notifier
 from cover_loader import CoverLoader
+from .. import util
 
 class CoverViewManager:
-	_path = None
 	_icon_view = None
 
 	@staticmethod
@@ -23,15 +23,11 @@ class CoverViewManager:
 			for device in manufacturer.get_devices():
 				for folder in device.get_folders():
 					for game in folder.get_games():
-						list_store.append([CoverLoader.load(CoverViewManager._path, manufacturer, device, game, 184, 256), game.get_name(), folder.get_path()])
+						list_store.append([CoverLoader.load(util.ApplicationManager.get_path(), manufacturer, device, game, 184, 256), game.get_name(), folder.get_path()])
 						game_count += 1
 
 		CoverViewManager._icon_view.set_model(list_store)
 		Notifier.create_info_notification("Search Result", "{0} game{1} found".format(game_count, "" if game_count == 1 else "s"))
-
-	@staticmethod
-	def set_path(path):
-		CoverViewManager._path = path
 
 	@staticmethod
 	def set_icon_view(icon_view):
