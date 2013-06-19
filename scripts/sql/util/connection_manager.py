@@ -7,17 +7,15 @@ import sqlite3
 import os
 
 class ConnectionManager:
-	_path = None
 	_database = None
 
 	@classmethod
 	def setup(cls, path, database):
-		cls._path = path
-		cls._database = database
+		cls._database = os.path.join(path, database)
 
 	@classmethod
 	def get_connection(cls):
-		connection = sqlite3.connect(os.path.join(cls._path, cls._database))
+		connection = sqlite3.connect(cls._database)
 		connection.row_factory = sqlite3.Row
 
 		return connection

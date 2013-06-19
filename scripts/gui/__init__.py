@@ -7,7 +7,6 @@ from icon_scrolled_window import *
 from menu_bar import *
 from search_box import *
 from application_window import *
-from application_window_manager import *
 from update_database_window import *
 from update_database_handler import *
 from search_handler import *
