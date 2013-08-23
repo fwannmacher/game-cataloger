@@ -32,7 +32,7 @@ class ApplicationWindow(gtk.Window):
 		window_paned.pack1(main_paned, True)
 		window_paned.pack2(gtk.VBox(), False)
 
-		window_box.pack_start(MenuBar(accel_group), False)
+		window_box.pack_start(MenuBar(accel_group, self), False)
 		window_box.pack_start(window_paned, True)
 		self.add(window_box)
 		self.show_all()
