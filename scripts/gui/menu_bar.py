@@ -6,17 +6,73 @@ Visit the project in http://code.google.com/p/python-project-utils/
 import pygtk
 pygtk.require('2.0')
 import gtk
+from edit_dialog import EditDialog
+from . import util
 
 class MenuBar(gtk.MenuBar):
-	def __init__(self, accel_group):
-		gtk.MenuBar.__init__(self)
+	MANUFACTURERS = 1
+	DEVICES = 2
+	FOLDERS = 3
 
-		file_menu = gtk.MenuItem("_File")
-		file_menu_content = gtk.Menu()
-		file_menu.set_submenu(file_menu_content)
-		quit_menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT, accel_group)
+	def __init__(self, accel_group, parent):
+		gtk.MenuBar.__init__(self)
+		self._create_file_menu(accel_group)
+		self._create_edit_menu(accel_group, parent)
+
+	def _create_file_menu(self, accel_group):
+		menu = gtk.MenuItem("_File")
+		menu_content = gtk.Menu()
+		menu.set_submenu(menu_content)
+		# Quit
+		menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT, accel_group)
 		key_value, modifier = gtk.accelerator_parse("<Control>Q")
-		quit_menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
-		quit_menu_item.connect("activate", gtk.main_quit)
-		file_menu_content.append(quit_menu_item)
-		self.append(file_menu)
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", gtk.main_quit)
+		menu_content.append(menu_item)
+		self.append(menu)
+
+	def _create_edit_menu(self, accel_group, parent):
+		menu = gtk.MenuItem("_Edit")
+		menu_content = gtk.Menu()
+		menu.set_submenu(menu_content)
+		# Manufacturers
+		menu_item = gtk.MenuItem("_Manufacturers...")
+		key_value, modifier = gtk.accelerator_parse("<Control>M")
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", MenuBar.__run_edit_dialog, parent, MenuBar.MANUFACTURERS)
+		menu_content.append(menu_item)
+		# Devices
+		menu_item = gtk.MenuItem("_Devices...")
+		key_value, modifier = gtk.accelerator_parse("<Control>D")
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", MenuBar.__run_edit_dialog, parent, MenuBar.DEVICES)
+		menu_content.append(menu_item)
+		# Folders
+		menu_item = gtk.MenuItem("_Folders...")
+		key_value, modifier = gtk.accelerator_parse("<Control>F")
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", MenuBar.__run_edit_dialog, parent, MenuBar.FOLDERS)
+		menu_content.append(menu_item)
+		menu_content.append(gtk.SeparatorMenuItem())
+		# Preferences
+		menu_item = gtk.ImageMenuItem(gtk.STOCK_PREFERENCES, accel_group)
+		key_value, modifier = gtk.accelerator_parse("<Control>P")
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", gtk.main_quit)
+		menu_content.append(menu_item)
+		self.append(menu)
+
+	@staticmethod
+	def __run_edit_dialog(menu_item, parent, edit_type):
+		adapter = None
+
+		if edit_type == MenuBar.MANUFACTURERS:
+			adapter = util.ManufacturersEditAdapter()
+		elif edit_type == MenuBar.DEVICES:
+			pass
+		elif edit_type == MenuBar.FOLDERS:
+			adapter = util.FoldersEditAdapter()
+
+		dialog = EditDialog(menu_item.get_label().replace("_", ""), parent, adapter)
+		dialog.run()
+		dialog.destroy()
