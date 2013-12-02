@@ -18,6 +18,7 @@ class MenuBar(gtk.MenuBar):
 		gtk.MenuBar.__init__(self)
 		self._create_file_menu(accel_group)
 		self._create_edit_menu(accel_group, parent)
+		self._create_tools_menus(accel_group, parent)
 
 	def _create_file_menu(self, accel_group):
 		menu = gtk.MenuItem("_File")
@@ -26,6 +27,18 @@ class MenuBar(gtk.MenuBar):
 		# Quit
 		menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT, accel_group)
 		key_value, modifier = gtk.accelerator_parse("<Control>Q")
+		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
+		menu_item.connect("activate", gtk.main_quit)
+		menu_content.append(menu_item)
+		self.append(menu)
+
+	def _create_tools_menus(self, accel_group, parent):
+		menu = gtk.MenuItem("_Tools")
+		menu_content = gtk.Menu()
+		menu.set_submenu(menu_content)
+		# Update Database
+		menu_item = gtk.MenuItem("_Update Database")
+		key_value, modifier = gtk.accelerator_parse("<Control>U")
 		menu_item.add_accelerator("activate", accel_group, key_value, modifier, gtk.ACCEL_VISIBLE)
 		menu_item.connect("activate", gtk.main_quit)
 		menu_content.append(menu_item)
@@ -69,7 +82,7 @@ class MenuBar(gtk.MenuBar):
 		if edit_type == MenuBar.MANUFACTURERS:
 			adapter = util.ManufacturersEditAdapter()
 		elif edit_type == MenuBar.DEVICES:
-			pass
+			adapter = util.DevicesEditAdapter()
 		elif edit_type == MenuBar.FOLDERS:
 			adapter = util.FoldersEditAdapter()
 

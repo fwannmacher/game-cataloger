@@ -25,6 +25,6 @@ class ManufacturersEditAdapter(IEditAdapter):
 		return {"Name" : sql.wrapper.Manufacturer.find_by_id(id).get_name()}
 
 	def save_item_values(self, id, parameters):
-		item = sql.wrapper.Manufacturer.find_by_id(id) if id != None else sql.wrapper.Manufacturer()
+		item = sql.wrapper.Manufacturer.find_by_id(id) if id else sql.wrapper.Manufacturer()
 		item.set_name(parameters["Name"])
 		item.save()

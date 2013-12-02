@@ -5,8 +5,12 @@ Visit the project in http://code.google.com/p/python-project-utils/
 
 from ... import sql
 from edit_adapter import IEditAdapter
+from devices_edit_adapter import DevicesEditAdapter
 
 class FoldersEditAdapter(IEditAdapter):
+	def __init__(self):
+		self._parent_adapter = DevicesEditAdapter()
+
 	def get_items_parameters(self):
 		return {"Alias" : "text", "Path" : "text"}
 
@@ -19,14 +23,30 @@ class FoldersEditAdapter(IEditAdapter):
 		return list
 
 	def items_have_parent(self):
-		return False
+		return True
+
+	def get_items_parent_list(self):
+		return self._parent_adapter.get_items_list()
+
+	def get_item_parent(self, id):
+		item = sql.wrapper.Folder.find_by_id(id)
+
+		return self._parent_adapter.get_item_values(item.get_parent().get_id())
+
+	def get_items_parent_list(self):
+		list = []
+
+		for item in sql.wrapper.Device.find_all():
+			list.append([item.get_id(), str(item.get_name())])
+
+		return list
 
 	def get_item_values(self, id):
 		item = sql.wrapper.Folder.find_by_id(id)
-		return {"Alias" : item.get_alias(), "Path" : item.get_path()}
+		return {"id" : id, "Alias" : item.get_alias(), "Path" : item.get_path()}
 
 	def save_item_values(self, id, parameters):
-		item = sql.wrapper.Folder.find_by_id(id) if id != None else sql.wrapper.Manufacturer()
+		item = sql.wrapper.Folder.find_by_id(id) if id else sql.wrapper.Folder()
 		item.set_alias(parameters["Alias"])
 		item.set_path(parameters["Path"])
-		item.save()
+		item.save(sql.wrapper.Device.find_by_id(parameters["Parent"]), "device_id")

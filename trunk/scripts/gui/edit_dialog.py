@@ -27,11 +27,13 @@ class EditDialog(gtk.Dialog):
 		self.vbox.pack_start(list_scrolled_window, True)
 
 		button = gtk.Button("Add", gtk.STOCK_ADD)
-		button.connect("clicked", AddButtonHandler.handle, self, adapter)
+		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
 		self.action_area.pack_start(button)
 		button = gtk.Button("Edit", gtk.STOCK_EDIT)
+		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
 		self.action_area.pack_start(button)
 		button = gtk.Button("Remove", gtk.STOCK_REMOVE)
+		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
 		self.action_area.pack_start(button)
 		
 		self.show_all()
@@ -46,14 +48,64 @@ class EditDialog(gtk.Dialog):
 	
 		return column
 
-class AddButtonHandler:
+class ButtonHandler:
 	@staticmethod
-	def handle(button, parent, adapter):
+	def on_add_button_click(button, parent, adapter, list_view):
 		dialog = SaveDialog("Add", parent, adapter)
-		dialog.run()
+
+		if dialog.run() == gtk.RESPONSE_OK:
+			parameters = {}
+
+			for box in dialog.vbox.get_children():
+				if type(box) == gtk.HBox:
+					inputs = box.get_children()
+					value = None
+
+					if type(inputs[1]) == gtk.Entry:
+						value = inputs[1].get_text()
+					elif type(inputs[1]) == gtkplus.ComboBox:
+						value = inputs[1].get_model()[inputs[1].get_active_iter()][0]
+
+					parameters[inputs[0].get_text()] = value
+
+			adapter.save_item_values(None, parameters)
+			list_view.set_model(adapter.get_items_list())
+
 		dialog.destroy()
 
 class SaveDialog(gtk.Dialog):
-	def __init__(self, name, parent, adapter):
+	def __init__(self, name, parent, adapter, item_id = None):
 		gtk.Dialog.__init__(self, name, parent, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_SAVE, gtk.RESPONSE_OK, gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL))
-		
+		self.vbox.set_size_request(480, -1)
+		self.vbox.set_spacing(5)
+
+		if adapter.items_have_parent():
+			box = gtk.HBox(spacing=10)
+			box.pack_start(gtk.Label("Parent"), False)
+			combo_box = gtkplus.ComboBox(adapter.get_items_parent_list())
+			cell = gtk.CellRendererText()
+			combo_box.pack_start(cell, True)
+			combo_box.add_attribute(cell, 'text', 1)
+			box.pack_end(combo_box, True)
+			self.vbox.pack_start(box)
+
+		for key, value in adapter.get_items_parameters().items():
+			self.vbox.pack_start(self._parse_input(key, value, item_id), True)
+
+		self.show_all()
+
+	def _parse_input(self, label, input_type, item_id):
+		box = gtk.HBox(spacing=10)
+		box.pack_start(gtk.Label(label), False)
+		input = None
+		values = adapter.get_item_values(item_id) if item_id else None
+
+		if input_type == "text":
+			input = gtk.Entry()
+
+			if values:
+				input.set_text(values[label])
+			
+		box.pack_end(input, True)
+
+		return box

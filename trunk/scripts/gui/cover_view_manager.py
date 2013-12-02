@@ -27,7 +27,7 @@ class CoverViewManager:
 						game_count += 1
 
 		CoverViewManager._icon_view.set_model(list_store)
-		Notifier.create_info_notification("Search Result", "{0} game{1} found".format(game_count, "" if game_count == 1 else "s"))
+		Notifier.create_info_notification("Search Result", "{0} media{1} found".format(game_count, "" if game_count == 1 else "s"))
 
 	@staticmethod
 	def set_icon_view(icon_view):

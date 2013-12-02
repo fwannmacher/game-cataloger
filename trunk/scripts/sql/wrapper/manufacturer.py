@@ -35,3 +35,6 @@ class Manufacturer(Wrapper):
 
 	def add_devices(self, devices):
 		self._devices.extend(devices)
+
+	def _load_parent(self):
+		pass
