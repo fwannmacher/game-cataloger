@@ -4,6 +4,7 @@ Visit the project in http://code.google.com/p/python-project-utils/
 """
 
 from . import Wrapper
+from device import Device
 
 class Folder(Wrapper):
 	_table = "folders"
@@ -13,6 +14,7 @@ class Folder(Wrapper):
 	_attributes_columns["_path"] = "path"
 	_attributes_columns["_is_compressed"] = "is_compressed"
 	_attributes_columns["_compression_engine"] = "compression_engine"
+	_attributes_columns["_device_id"] = "device_id"
 
 	@classmethod
 	def find_by_alias(cls, alias):
@@ -30,6 +32,7 @@ class Folder(Wrapper):
 		self._is_compressed = is_compressed
                 self._compression_engine = compression_engine
 		self._games = []
+		self._device_id = 0
 
 	def get_path(self):
 		return self._path
@@ -50,7 +53,7 @@ class Folder(Wrapper):
 		self._path = path
 
 	def set_alias(self, alias):
-		self._path = path
+		self._alias = alias
 
 	def set_compression_engine(self, compression_engine):
 		self._compression_engine = compression_engine
@@ -64,4 +67,5 @@ class Folder(Wrapper):
 	def add_games(self, games):
 		self._games.extend(games)
 
-	
+	def _load_parent(self):
+		self._parent = Device.find_by_id(self._device_id)

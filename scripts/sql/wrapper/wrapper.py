@@ -112,9 +112,16 @@ class Wrapper:
 	
 	def __init__(self, id = None):
 		self._id = id
+		self._parent = None
 
 	def get_id(self):
 		return self._id
+
+	def get_parent(self):
+		if not self._parent:
+			self._load_parent()
+
+		return self._parent
 
 	def set_id(self, id):
 		self._id = id
@@ -137,6 +144,9 @@ class Wrapper:
 			self._destroy(connection)
 
 		connection.close()
+
+	def _load_parent(self):
+		raise "Unimplmented Method!"
 		
 
 	def _destroy(self, connecntion):
@@ -164,7 +174,7 @@ class Wrapper:
 		values = []
 
 		for attribute, column in self.__class__._attributes_columns.items():
-			if column != "id":
+			if column != "id" and column != foreign_key:
 				if len(columns) > 0:
 					columns += ","
 
