@@ -22,8 +22,19 @@ class DevicesEditAdapter(IEditAdapter):
 
 		return list
 
+	def get_items_list_by_parent(self, id):
+		list = []
+
+		for item in sql.wrapper.Device.find_all_by_foreign_key("manufacturer_id", sql.wrapper.Manufacturer.find_by_id(id)):
+			list.append([item.get_id(), str(item.get_name())])
+
+		return list
+
 	def items_have_parent(self):
 		return True
+
+	def get_parent_type_name(self):
+		return "Manufacturer"
 
 	def get_items_parent_list(self):
 		return self._parent_adapter.get_items_list()
@@ -41,4 +52,6 @@ class DevicesEditAdapter(IEditAdapter):
 	def save_item_values(self, id, parameters):
 		item = sql.wrapper.Device.find_by_id(id) if id else sql.wrapper.Device()
 		item.set_name(parameters["Name"])
-		item.save(sql.wrapper.Manufacturer.find_by_id(parameters["Parent"]), "manufacturer_id")
+		item.save(sql.wrapper.Manufacturer.find_by_id(parameters[self.get_parent_type_name()]), "manufacturer_id")
+
+		return item

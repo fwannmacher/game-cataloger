@@ -28,3 +28,5 @@ class ManufacturersEditAdapter(IEditAdapter):
 		item = sql.wrapper.Manufacturer.find_by_id(id) if id else sql.wrapper.Manufacturer()
 		item.set_name(parameters["Name"])
 		item.save()
+
+		return item
