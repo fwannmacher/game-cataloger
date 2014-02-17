@@ -182,6 +182,11 @@ class Wrapper:
 				values.append(getattr(self, attribute))
 
 		if belongs_to is not None:
+			for attribute, column in self.__class__._attributes_columns.items():
+				if column == foreign_key:
+					setattr(self, attribute, belongs_to.get_id())
+					break
+
 			if len(columns) > 0:
 				columns += ","
 

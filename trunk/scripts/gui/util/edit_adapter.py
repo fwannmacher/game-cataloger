@@ -10,7 +10,13 @@ class IEditAdapter:
 	def get_items_list(self):
 		raise "Unimplemented Method!"
 
+	def get_items_list_by_parent(self, id):
+		raise "Unimplemented Method!"
+
 	def items_have_parent(self):
+		raise "Unimplemented Method!"
+
+	def get_parent_type_name(self):
 		raise "Unimplemented Method!"
 
 	def get_items_parent_list(self):

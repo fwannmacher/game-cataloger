@@ -22,8 +22,19 @@ class FoldersEditAdapter(IEditAdapter):
 
 		return list
 
+	def get_items_list_by_parent(self, id):
+		list = []
+
+		for item in sql.wrapper.Folder.find_all_by_foreign_key("device_id", sql.wrapper.Device.find_by_id(id)):
+			list.append([item.get_id(), str(item.get_alias()), str(item.get_path())])
+
+		return list
+
 	def items_have_parent(self):
 		return True
+
+	def get_parent_type_name(self):
+		return "Device"
 
 	def get_items_parent_list(self):
 		return self._parent_adapter.get_items_list()
@@ -49,4 +60,6 @@ class FoldersEditAdapter(IEditAdapter):
 		item = sql.wrapper.Folder.find_by_id(id) if id else sql.wrapper.Folder()
 		item.set_alias(parameters["Alias"])
 		item.set_path(parameters["Path"])
-		item.save(sql.wrapper.Device.find_by_id(parameters["Parent"]), "device_id")
+		item.save(sql.wrapper.Device.find_by_id(parameters[self.get_parent_type_name()]), "device_id")
+
+		return item

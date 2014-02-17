@@ -13,7 +13,7 @@ class EditDialog(gtk.Dialog):
 		gtk.Dialog.__init__(self, name, parent, gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT, (gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE))
 		self.vbox.set_size_request(480, -1)
 
-		list_view = gtkplus.ListView(adapter.get_items_list())
+		list_view = gtkplus.ListView(adapter.get_items_list() if not adapter.items_have_parent() else [])
 		index = 1
 
 		for key, value in adapter.get_items_parameters().items():
@@ -24,16 +24,25 @@ class EditDialog(gtk.Dialog):
 		list_scrolled_window.set_policy(gtk.POLICY_AUTOMATIC, gtk.POLICY_AUTOMATIC)
 		list_scrolled_window.set_size_request(-1, 200)
 		list_scrolled_window.add_with_viewport(list_view)
-		self.vbox.pack_start(list_scrolled_window, True)
+		self.vbox.pack_end(list_scrolled_window, True)
+
+		parent_combo_box = None
+
+		if adapter.items_have_parent():
+			builder = ParentComboBoxBuilder(adapter)
+			builder.build_parent_combo_box()
+			builder.build_parent_combo_box_handler(list_view)
+			box, parent_combo_box = builder.get_result()
+			self.vbox.pack_start(box)
 
 		button = gtk.Button("Add", gtk.STOCK_ADD)
-		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
+		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view, parent_combo_box)
 		self.action_area.pack_start(button)
 		button = gtk.Button("Edit", gtk.STOCK_EDIT)
-		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
+		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view, parent_combo_box)
 		self.action_area.pack_start(button)
 		button = gtk.Button("Remove", gtk.STOCK_REMOVE)
-		button.connect("clicked", ButtonHandler.on_add_button_click, self, adapter, list_view)
+		button.connect("clicked", ButtonHandler.on_remove_button_click, self, adapter, list_view)
 		self.action_area.pack_start(button)
 		
 		self.show_all()
@@ -48,9 +57,35 @@ class EditDialog(gtk.Dialog):
 	
 		return column
 
+class ParentComboBoxBuilder:
+	def __init__(self, adapter):
+		self._adapter = adapter
+		self._combo_box = None
+		self._result = None
+
+	def build_parent_combo_box(self):
+		self._result = gtk.HBox(spacing=10)
+		self._result.pack_start(gtk.Label(self._adapter.get_parent_type_name()), False)
+		self._combo_box = gtkplus.ComboBox(self._adapter.get_items_parent_list())
+		cell = gtk.CellRendererText()
+		self._combo_box.pack_start(cell, True)
+		self._combo_box.add_attribute(cell, 'text', 1)
+		self._result.pack_end(self._combo_box, True)
+
+	def build_parent_combo_box_handler(self, list_view):
+		self._combo_box.connect("changed", ComboBoxHandler.on_selected_item_changed, self._adapter, list_view)
+
+	def get_result(self):
+		return (self._result, self._combo_box)
+
+class ComboBoxHandler:
+	@staticmethod
+	def on_selected_item_changed(combo_box, adapter, list_view):
+		list_view.set_model(adapter.get_items_list_by_parent(combo_box.get_model()[combo_box.get_active_iter()][0]))
+
 class ButtonHandler:
 	@staticmethod
-	def on_add_button_click(button, parent, adapter, list_view):
+	def on_add_button_click(button, parent, adapter, list_view, parent_combo_box):
 		dialog = SaveDialog("Add", parent, adapter)
 
 		if dialog.run() == gtk.RESPONSE_OK:
@@ -68,10 +103,39 @@ class ButtonHandler:
 
 					parameters[inputs[0].get_text()] = value
 
-			adapter.save_item_values(None, parameters)
-			list_view.set_model(adapter.get_items_list())
+			item = adapter.save_item_values(None, parameters)
+			list = []
+
+			if adapter.items_have_parent():
+				list = adapter.get_items_list_by_parent(item.get_parent().get_id())
+
+				model = parent_combo_box.get_model()
+				iter = model.get_iter(0)
+
+				while iter is not None:
+					if model.get_value(iter, 0) == item.get_parent().get_id():
+						parent_combo_box.set_active_iter(iter)
+						break
+	
+					iter = model.iter_next(iter)
+			else:
+				list = adapter.get_items_list()
+
+			list_view.set_model(list)
 
 		dialog.destroy()
+
+	@staticmethod
+	def on_remove_button_click(button, parent, adapter, list_view):
+		model, iter = list_view.get_selection().get_selected()
+
+		if iter is not None:
+			message_dialog = gtk.MessageDialog(parent, gtk.DIALOG_DESTROY_WITH_PARENT, gtk.MESSAGE_QUESTION, gtk.BUTTONS_YES_NO, "Are you sure?")
+
+			if message_dialog.run() == gtk.RESPONSE_YES:
+				pass
+
+			message_dialog.destroy()
 
 class SaveDialog(gtk.Dialog):
 	def __init__(self, name, parent, adapter, item_id = None):
@@ -80,14 +144,9 @@ class SaveDialog(gtk.Dialog):
 		self.vbox.set_spacing(5)
 
 		if adapter.items_have_parent():
-			box = gtk.HBox(spacing=10)
-			box.pack_start(gtk.Label("Parent"), False)
-			combo_box = gtkplus.ComboBox(adapter.get_items_parent_list())
-			cell = gtk.CellRendererText()
-			combo_box.pack_start(cell, True)
-			combo_box.add_attribute(cell, 'text', 1)
-			box.pack_end(combo_box, True)
-			self.vbox.pack_start(box)
+			builder = ParentComboBoxBuilder(adapter)
+			builder.build_parent_combo_box()
+			self.vbox.pack_start(builder.get_result()[0])
 
 		for key, value in adapter.get_items_parameters().items():
 			self.vbox.pack_start(self._parse_input(key, value, item_id), True)
